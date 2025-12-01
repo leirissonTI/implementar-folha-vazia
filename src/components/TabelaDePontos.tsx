@@ -146,16 +146,45 @@ export function TabelaDePontos() {
                     fetch(`http://172.19.3.52:3333/api/v1/espelho/resgatar-espelho-diario-mes/${cpf}/${mes}-${ano}`),
                 ])
 
-                const resultPontosDoMesConvertido = await responsePonDoMes.json()  // recebendo os dados das API
-                const resultPontosDoMes = await resultPontosDoMesConvertido.data 
-                const origin = resultPontosDoMes.map((o: RegistroPonto) => (
-                    o.origem
-                ))
+                const resultPontosDoMesConvertido = await responsePonDoMes.json()
+                const resultPontosDoMes = await resultPontosDoMesConvertido.data
+                const origin = (Array.isArray(resultPontosDoMes) ? resultPontosDoMes : []).map((o: RegistroPonto) => o.origem)
 
-                setDados(resultPontosDoMes || [])
+                if (!resultPontosDoMes || (Array.isArray(resultPontosDoMes) && resultPontosDoMes.length === 0)) {
+                    const diasNoMes = new Date(Number(ano), Number(mes), 0).getDate()
+                    const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+                    const mesEmBranco: RegistroPonto[] = Array.from({ length: diasNoMes }, (_, i) => {
+                        const dia = i + 1
+                        const date = new Date(Number(ano), Number(mes) - 1, dia)
+                        const diaSemana = nomesDias[date.getDay()]
+                        return {
+                            diaDoMes: `${String(dia).padStart(2, '0')} - ${diaSemana}`,
+                            primeiraEntrada: '',
+                            primeiraSaida: '',
+                            segundaEntrada: '',
+                            segundaSaida: '',
+                            credito: '0',
+                            debito: '0',
+                            horasNormais: '0',
+                            horasExtras: '0',
+                            horasTrabalhadas: '0',
+                            saldo: '0',
+                            observacoes: '',
+                            status: 'Sem Registro',
+                            motivoReajuste: '',
+                            horasAlmoco: '0',
+                            bancoDeHoras: '0',
+                            origem: ''
+                        }
+                    })
 
-                setOrigens(origin || '')
-                setDados(resultPontosDoMes || []) // setDadosUSer(resultPontosDoMes)
+                    setDados(mesEmBranco)
+                    setOrigens([])
+                } else {
+                    setDados(resultPontosDoMes || [])
+                    setOrigens(origin || '')
+                    setDados(resultPontosDoMes || [])
+                }
         
             } catch (error) {
                 console.error('Erro ao buscar registros:', error)
